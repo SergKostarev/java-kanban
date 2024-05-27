@@ -19,7 +19,7 @@ public interface TaskManager {
 
     void removeAllEpics();
 
-    model.Task getTask(Integer id);
+    Task getTask(Integer id);
 
     Subtask getSubtask(Integer id);
 
