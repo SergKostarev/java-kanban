@@ -20,31 +20,35 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getAllTasks() {
         ArrayList<Task> tasksList = new ArrayList<>();
-        for (Task task: tasks.values()){
+        for (Task task: tasks.values()) {
             tasksList.add(new Task(task));
         }
         return tasksList;
     }
+
     @Override
     public List<Subtask> getAllSubtasks() {
         ArrayList<Subtask> subtasksList = new ArrayList<>();
-        for (Subtask subtask: subtasks.values()){
+        for (Subtask subtask: subtasks.values()) {
             subtasksList.add(new Subtask(subtask));
         }
         return subtasksList;
     }
+
     @Override
     public List<Epic> getAllEpics() {
         ArrayList<Epic> epicsList = new ArrayList<>();
-        for (Epic epic: epics.values()){
+        for (Epic epic: epics.values()) {
             epicsList.add(new Epic(epic));
         }
         return epicsList;
     }
+
     @Override
     public void removeAllTasks() {
         tasks.clear();
     }
+
     @Override
     public void removeAllSubtask() {
         for (Epic epic : epics.values()) {
@@ -53,11 +57,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subtasks.clear();
     }
+
     @Override
     public void removeAllEpics() {
         epics.clear();
         subtasks.clear();
     }
+
     @Override
     public Task getTask(Integer id) {
         Task task = tasks.get(id);
@@ -161,7 +167,7 @@ public class InMemoryTaskManager implements TaskManager {
             System.out.println("Не задан идентификатор подзадачи.");
             return null;
         }
-        if (subtaskInput.getId().equals(subtaskInput.getEpicId())){
+        if (subtaskInput.getId().equals(subtaskInput.getEpicId())) {
             System.out.println("Идентификаторы эпика и подзадачи совпадают, добавление подзадачи невозможно.");
             return null;
         }
@@ -261,7 +267,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getHistory() {
-        List <Task> historyList = new ArrayList<>();
+        List<Task> historyList = new ArrayList<>();
         for (Task task: history.getHistory()) {
             if (task.getClass() == Task.class) {
                 historyList.add(new Task(task));
