@@ -59,7 +59,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public void add (Task task) {
+    public void add(Task task) {
         Node node = taskHistory.get(task.getId());
         if (node != null) {
             removeNode(node);
@@ -68,7 +68,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public void remove (int id) {
+    public void remove(int id) {
         Node node = taskHistory.get(id);
         if (node != null) {
             removeNode(node);
