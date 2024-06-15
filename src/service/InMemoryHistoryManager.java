@@ -12,7 +12,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     private Node last;
 
-    HashMap<Integer, Node> taskHistory = new HashMap<>();
+    private final HashMap<Integer, Node> taskHistory = new HashMap<>();
 
     @Override
     public List<Task> getHistory() {
@@ -41,7 +41,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         return taskList;
     }
 
-    public void removeNode(Node node) {
+    private void removeNode(Node node) {
         Node currNext = node.next;
         Node currPrev = node.prev;
         if (currNext != null) {
