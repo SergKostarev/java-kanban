@@ -48,10 +48,10 @@ class InMemoryTaskManagerTest {
         Task task = new Task(4, "Сходить в магазин", "Нет описания", TaskStatus.NEW);
         Task taskCopy = new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus());
         tm.addTask(task);
-        tm.getAllTasks();
+        tm.getTask(1);
+        tm.getTask(4);
         tm.updateTask(new Task(4, "Погулять с собакой", "Описание", TaskStatus.IN_PROGRESS));
         List<Task> history = tm.getHistory();
-        Assertions.assertEquals(2, history.size(), "History list size differs from 2");
         Task taskAfter =  history.get(1);
         Assertions.assertEquals(taskCopy.getId(), taskAfter.getId(), "Task identifiers are not equal");
         Assertions.assertEquals(taskCopy.getName(), taskAfter.getName(), "Task names are not equal");
@@ -60,10 +60,31 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
+    public void shouldReturnTwoElementsInTaskHistoryAfterRepeatedGetting() {
+        Task task = new Task("Сходить в магазин", "Нет описания", TaskStatus.NEW);
+        tm.addTask(task);
+        tm.getTask(1);
+        tm.getTask(4);
+        tm.getTask(1);
+        List<Task> history = tm.getHistory();
+        Assertions.assertEquals(2, history.size(), "History list size differs from 2");
+    }
+
+    @Test
+    public void shouldReturnFirstTaskInTaskHistoryAfterRepeatedGetting() {
+        Task task = new Task("Сходить в магазин", "Нет описания", TaskStatus.NEW);
+        tm.addTask(task);
+        tm.getTask(1);
+        tm.getTask(4);
+        tm.getTask(1);
+        List<Task> history = tm.getHistory();
+        Assertions.assertEquals(history.get(1).getId(), 1, "Last task id differs from 1");
+    }
+
+    @Test
     public void shouldIgnoreGivenIdWhenAddingTask() {
         Task task = new Task(10, "Сходить в магазин", "Нет описания", TaskStatus.NEW);
-        tm.addTask(task);
-        Assertions.assertEquals(4, task.getId(), "Task identifier is not equal to 4");
+        Assertions.assertEquals(4, tm.addTask(task).getId(), "Task identifier is not equal to 4");
     }
 
     @Test
@@ -80,7 +101,16 @@ class InMemoryTaskManagerTest {
         Assertions.assertNull(epic, "Epic with subtask identifiers list containing epic identifier was updated");
     }
 
-
+    @Test
+    public void shouldReturnNoOldSubtasksInEpic() {
+        Subtask subtask = new Subtask("Сходить в магазин", "Нет описания", TaskStatus.NEW, 2);
+        tm.addSubtask(subtask);
+        tm.removeSubtask(4);
+        Assertions.assertEquals(tm.getEpic(2).getSubtasksId().size(), 1, "Subtask list size of epic with id 2 is not equal to 1");
+        Assertions.assertEquals(tm.getEpic(2).getSubtasksId().getFirst(), 3, "Subtask id of epic with id 2 is not 3");
+        tm.removeAllSubtask();
+        Assertions.assertTrue(tm.getEpic(2).getSubtasksId().isEmpty(), "Subtask list of epic with id 2 is not empty");
+    }
 
 
 

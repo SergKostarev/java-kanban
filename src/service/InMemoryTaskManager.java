@@ -19,20 +19,36 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getAllTasks() {
-        return new ArrayList<>(tasks.values());
+        ArrayList<Task> tasksList = new ArrayList<>();
+        for (Task task: tasks.values()) {
+            tasksList.add(new Task(task));
+        }
+        return tasksList;
     }
+
     @Override
     public List<Subtask> getAllSubtasks() {
-        return new ArrayList<>(subtasks.values());
+        ArrayList<Subtask> subtasksList = new ArrayList<>();
+        for (Subtask subtask: subtasks.values()) {
+            subtasksList.add(new Subtask(subtask));
+        }
+        return subtasksList;
     }
+
     @Override
     public List<Epic> getAllEpics() {
-        return new ArrayList<>(epics.values());
+        ArrayList<Epic> epicsList = new ArrayList<>();
+        for (Epic epic: epics.values()) {
+            epicsList.add(new Epic(epic));
+        }
+        return epicsList;
     }
+
     @Override
     public void removeAllTasks() {
         tasks.clear();
     }
+
     @Override
     public void removeAllSubtask() {
         for (Epic epic : epics.values()) {
@@ -41,11 +57,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subtasks.clear();
     }
+
     @Override
     public void removeAllEpics() {
         epics.clear();
         subtasks.clear();
     }
+
     @Override
     public Task getTask(Integer id) {
         Task task = tasks.get(id);
@@ -53,8 +71,9 @@ public class InMemoryTaskManager implements TaskManager {
             history.add(task);
         } else {
             System.out.println("Не найдена задача с указанным идентификатором");
+            return null;
         }
-        return task;
+        return new Task(task);
     }
 
     @Override
@@ -64,8 +83,9 @@ public class InMemoryTaskManager implements TaskManager {
             history.add(subtask);
         } else {
             System.out.println("Не найдена подзадача с указанным идентификатором");
+            return null;
         }
-        return subtask;
+        return new Subtask(subtask);
     }
 
     @Override
@@ -75,8 +95,9 @@ public class InMemoryTaskManager implements TaskManager {
             history.add(epic);
         } else {
             System.out.println("Не найден эпик с указанным идентификатором");
+            return null;
         }
-        return epic;
+        return new Epic(epic);
     }
 
     private void setId(Task task) {
@@ -85,14 +106,16 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task addTask(Task task) {
+    public Task addTask(Task taskInput) {
+        Task task = new Task(taskInput);
         setId(task);
         tasks.put(task.getId(), task);
-        return task;
+        return new Task(task);
     }
 
     @Override
-    public Subtask addSubtask(Subtask subtask) {
+    public Subtask addSubtask(Subtask subtaskInput) {
+        Subtask subtask = new Subtask(subtaskInput);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic == null) {
             System.out.println("Не найден эпик с указанным идентификатором, добавление подзадачи невозможно.");
@@ -102,11 +125,12 @@ public class InMemoryTaskManager implements TaskManager {
         subtasks.put(subtask.getId(), subtask);
         epic.addSubTask(subtask.getId());
         updateEpicStatus(subtask.getEpicId());
-        return subtask;
+        return new Subtask(subtask);
     }
 
     @Override
-    public Epic addEpic(Epic epic) {
+    public Epic addEpic(Epic epicInput) {
+        Epic epic = new Epic(epicInput);
         if (epic.getSubtasksId().contains(epic.getId())) {
             System.out.println("Список подзадач эпика содержит идентификатор эпика, добавление невозможно.");
             return null;
@@ -119,72 +143,75 @@ public class InMemoryTaskManager implements TaskManager {
         }
         setId(epic);
         epics.put(epic.getId(), epic);
-        return epic;
+        return new Epic(epic);
     }
 
     @Override
-    public Task updateTask(Task task) {
-        if (task.getId() == null) {
+    public Task updateTask(Task taskInput) {
+        if (taskInput.getId() == null) {
             System.out.println("Не задан идентификатор задачи.");
             return null;
         }
-        if (!tasks.containsKey(task.getId())) {
+        if (!tasks.containsKey(taskInput.getId())) {
             System.out.println("Не найдена задача с указанным идентификатором, обновление невозможно.");
             return null;
         }
+        Task task = new Task(taskInput);
         tasks.put(task.getId(), task);
-        return task;
+        return new Task(task);
     }
 
     @Override
-    public Subtask updateSubtask(Subtask subtask) {
-        if (subtask.getId() == null) {
+    public Subtask updateSubtask(Subtask subtaskInput) {
+        if (subtaskInput.getId() == null) {
             System.out.println("Не задан идентификатор подзадачи.");
             return null;
         }
-        if (subtask.getId().equals(subtask.getEpicId())){
+        if (subtaskInput.getId().equals(subtaskInput.getEpicId())) {
             System.out.println("Идентификаторы эпика и подзадачи совпадают, добавление подзадачи невозможно.");
             return null;
         }
-        if (!subtasks.containsKey(subtask.getId())) {
+        if (!subtasks.containsKey(subtaskInput.getId())) {
             System.out.println("Не найдена подзадча с указанным идентификатором, обновление невозможно.");
             return null;
         }
-        Epic epic = epics.get(subtask.getEpicId());
+        Epic epic = epics.get(subtaskInput.getEpicId());
         if (epic == null) {
             System.out.println("Не найден эпик с указанным идентификатором, обновление подзадачи невозможно.");
             return null;
         }
+        Subtask subtask = new Subtask(subtaskInput);
         removeSubtask(subtask.getId());
         subtasks.put(subtask.getId(), subtask);
         epic.addSubTask(subtask.getId());
         updateEpicStatus(subtask.getEpicId());
-        return subtask;
+        return new Subtask(subtask);
     }
 
     @Override
-    public Epic updateEpic(Epic newEpic) {
-        if (newEpic.getSubtasksId().contains(newEpic.getId())) {
+    public Epic updateEpic(Epic epicInput) {
+        if (epicInput.getSubtasksId().contains(epicInput.getId())) {
             System.out.println("Список подзадач эпика содержит идентификатор эпика, добавление невозможно.");
             return null;
         }
-        if (newEpic.getId() == null) {
+        if (epicInput.getId() == null) {
             System.out.println("Не задан идентификатор эпика.");
             return null;
         }
-        if (!epics.containsKey(newEpic.getId())) {
+        if (!epics.containsKey(epicInput.getId())) {
             System.out.println("Не найден эпик с указанным идентификатором, обновление невозможно.");
             return null;
         }
-        for (Integer subtaskId: newEpic.getSubtasksId()) {
+        for (Integer subtaskId: epicInput.getSubtasksId()) {
             if (subtasks.get(subtaskId) == null) {
                 System.out.println("Не найдена подзадача с идентификатором " + subtaskId + ", добавление невозможно.");
                 return null;
             }
         }
+        Epic newEpic = new Epic(epicInput);
         epics.put(newEpic.getId(), newEpic);
         updateEpicStatus(newEpic.getId());
-        return newEpic;
+        return new Epic(newEpic);
     }
 
     @Override
@@ -231,7 +258,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer subtaskId: epics.get(id).getSubtasksId()) {
             if (subtasks.containsKey(subtaskId)) {
                 Subtask subtask = subtasks.get(subtaskId);
-                subtasksList.add(subtask);
+                subtasksList.add(new Subtask(subtask));
                 history.add(subtask);
             }
         }
@@ -240,7 +267,17 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getHistory() {
-        return history.getHistory();
+        List<Task> historyList = new ArrayList<>();
+        for (Task task: history.getHistory()) {
+            if (task.getClass() == Task.class) {
+                historyList.add(new Task(task));
+            } else if (task.getClass() == Subtask.class) {
+                historyList.add(new Subtask((Subtask) task));
+            } else if (task.getClass() == Epic.class) {
+                historyList.add(new Epic((Epic) task));
+            }
+        }
+        return historyList;
     }
 
     private void updateEpicStatus(Integer id) {
