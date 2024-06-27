@@ -12,9 +12,9 @@ import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
     private Integer idCounter = 1;
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, Subtask> subtasks = new HashMap<>();
-    private final Map<Integer, Epic> epics = new HashMap<>();
+    protected final Map<Integer, Task> tasks = new HashMap<>();
+    protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+    protected final Map<Integer, Epic> epics = new HashMap<>();
     private final HistoryManager history = Managers.getDefaultHistory();
 
     @Override
@@ -50,7 +50,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeAllSubtask() {
+    public void removeAllSubtasks() {
         for (Epic epic : epics.values()) {
             epic.clearSubTasks();
             epic.setTaskStatus(TaskStatus.NEW);
