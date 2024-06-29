@@ -3,7 +3,6 @@ package service;
 import model.Epic;
 import model.Subtask;
 import model.Task;
-import model.TaskStatus;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
 
@@ -25,12 +23,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         this.file = file;
     }
 
-    private enum TaskType {
-        TASK,
-        SUBTASK,
-        EPIC
-    }
-
     private void save() {
         try (BufferedWriter bw = new BufferedWriter(
                 new FileWriter(file, StandardCharsets.UTF_8))) {
@@ -38,68 +30,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             bw.write(header);
             for (Task task: super.tasks.values()) {
                 bw.newLine();
-                bw.write(toString(task));
+                bw.write(TaskConverter.toString(task));
             }
             for (Subtask subtask: super.subtasks.values()) {
                 bw.newLine();
-                bw.write(toString(subtask));
+                bw.write(TaskConverter.toString(subtask));
             }
             for (Epic epic: super.epics.values()) {
                 bw.newLine();
-                bw.write(toString(epic));
+                bw.write(TaskConverter.toString(epic));
             }
         } catch (IOException e) {
             throw new ManagerSaveException("Произошла ошибка при записи данных в файл");
-        }
-    }
-
-    private String toString(Task task) {
-        String taskType;
-        if (task.getClass() == Task.class) {
-            taskType = TaskType.TASK.name();
-        } else if (task.getClass() == Subtask.class) {
-            taskType = TaskType.SUBTASK.name();
-        } else if (task.getClass() == Epic.class) {
-            taskType = TaskType.EPIC.name();
-        } else {
-            throw new IllegalArgumentException("Неизвестный тип задачи");
-        }
-        if (task.getClass() == Subtask.class) {
-            Subtask subtask = (Subtask) task;
-            return String.join(",", subtask.getId().toString(),
-                    taskType, subtask.getName(),
-                    subtask.getStatus().toString(), subtask.getDescription(),
-                    subtask.getEpicId().toString());
-        } else {
-            return String.join(",", task.getId().toString(),
-                    taskType, task.getName(),
-                    task.getStatus().toString(), task.getDescription());
-        }
-    }
-
-    private static Task fromString(String value) {
-        String[] items = value.split(",");
-        String id = items[0];
-        String type = items[1];
-        String name = items[2];
-        String status = items[3];
-        String description = items[4];
-        switch (type) {
-            case "TASK" -> {
-                return new Task(Integer.parseInt(id), name,
-                        description, TaskStatus.valueOf(status));
-            }
-            case "SUBTASK" -> {
-                String epicId = items[5];
-                return new Subtask(Integer.parseInt(id), name,
-                        description, TaskStatus.valueOf(status),
-                        Integer.parseInt(epicId));
-            }
-            case "EPIC" -> {
-                return new Epic(Integer.parseInt(id), name,
-                        description, new ArrayList<>());
-            }
-            default -> throw new IllegalArgumentException("Неизвестный тип задачи");
         }
     }
 
@@ -109,7 +51,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         String[] lines = content.split(System.lineSeparator());
         for (int i = 0; i < lines.length; i++) {
             if (i != 0) {
-                Task taskFromFile = fromString(lines[i]);
+                Task taskFromFile = TaskConverter.fromString(lines[i]);
                 if (taskFromFile.getClass() == Task.class) {
                     fm.tasks.put(taskFromFile.getId(), taskFromFile);
                 } else if (taskFromFile.getClass() == Subtask.class) {
