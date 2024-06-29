@@ -15,7 +15,7 @@ public interface TaskManager {
 
     void removeAllTasks();
 
-    void removeAllSubtask();
+    void removeAllSubtasks();
 
     void removeAllEpics();
 

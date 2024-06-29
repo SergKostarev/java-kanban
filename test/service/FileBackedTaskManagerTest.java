@@ -8,16 +8,25 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-class InMemoryTaskManagerTest {
+import static service.FileBackedTaskManager.loadFromFile;
 
-    private static TaskManager tm;
+public class FileBackedTaskManagerTest {
+    private static FileBackedTaskManager tm;
 
     @BeforeEach
     public void prepare() {
-        tm = Managers.getDefault();
+        File file;
+        try {
+            file = File.createTempFile("test_manager", ".csv");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        tm = Managers.getFileBackedTaskManager(file);
         tm.addTask(new Task("Закончить пятый спринт", "Нет описания", TaskStatus.NEW));
         tm.addEpic(new Epic("Провести уборку", "До 18 мая", new ArrayList<>()));
         tm.addSubtask(new Subtask("Вымыть пол", "Нет описания", TaskStatus.NEW, 2));
@@ -111,4 +120,55 @@ class InMemoryTaskManagerTest {
         tm.removeAllSubtasks();
         Assertions.assertTrue(tm.getEpic(2).getSubtasksId().isEmpty(), "Subtask list of epic with id 2 is not empty");
     }
+
+    @BeforeEach
+    public void shouldCreateFileWithTasks() {
+        Assertions.assertTrue(tm.getFile().isFile(), "File doesn't exist");
+    }
+
+    @Test
+    public void shouldDeserializeTasksAfterAdding() {
+        FileBackedTaskManager newTm;
+        try {
+            newTm = loadFromFile(tm.getFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertEquals(newTm.getAllEpics().size(), 1,  "Size of epic list differs from 1");
+        Assertions.assertEquals(newTm.getAllTasks().size(), 1,  "Size of task list differs from 1");
+        Assertions.assertEquals(newTm.getAllSubtasks().size(), 1,  "Size of subtask list differs from 1");
+    }
+
+    @Test
+    public void shouldDeserializeTasksAfterRemoving() {
+        tm.removeAllTasks();
+        tm.removeAllEpics();
+        tm.removeAllSubtasks();
+        FileBackedTaskManager newTm;
+        try {
+            newTm = loadFromFile(tm.getFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertTrue(newTm.getAllEpics().isEmpty(),   "Epic list is not empty");
+        Assertions.assertTrue(newTm.getAllTasks().isEmpty(),  "Task list is not empty");
+        Assertions.assertTrue(newTm.getAllSubtasks().isEmpty(),  "Subtask list is not empty");
+    }
+
+    @Test
+    public void shouldBeEqualTasksAfterSerializingAndDeserializing() {
+        FileBackedTaskManager newTm;
+        try {
+            newTm = loadFromFile(tm.getFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertEquals(newTm.getEpic(2), tm.getEpic(2),
+                "Epics with id 2 in InMemoryTaskManager and FileBackedTaskManager are not equal");
+        Assertions.assertEquals(newTm.getTask(1), tm.getTask(1),
+                "Tasks with id 1 in InMemoryTaskManager and FileBackedTaskManager are not equal");
+        Assertions.assertEquals(newTm.getSubtask(3), tm.getSubtask(3),
+                "Subtasks with id 3 in InMemoryTaskManager and FileBackedTaskManager are not equal");
+    }
+
 }
