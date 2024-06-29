@@ -128,7 +128,7 @@ public class FileBackedTaskManagerTest {
 
     @Test
     public void shouldDeserializeTasksAfterAdding() {
-        FileBackedTaskManager newTm = null;
+        FileBackedTaskManager newTm;
         try {
             newTm = loadFromFile(tm.getFile());
         } catch (IOException e) {
@@ -144,7 +144,7 @@ public class FileBackedTaskManagerTest {
         tm.removeAllTasks();
         tm.removeAllEpics();
         tm.removeAllSubtasks();
-        FileBackedTaskManager newTm = null;
+        FileBackedTaskManager newTm;
         try {
             newTm = loadFromFile(tm.getFile());
         } catch (IOException e) {
@@ -153,6 +153,22 @@ public class FileBackedTaskManagerTest {
         Assertions.assertTrue(newTm.getAllEpics().isEmpty(),   "Epic list is not empty");
         Assertions.assertTrue(newTm.getAllTasks().isEmpty(),  "Task list is not empty");
         Assertions.assertTrue(newTm.getAllSubtasks().isEmpty(),  "Subtask list is not empty");
+    }
+
+    @Test
+    public void shouldBeEqualTasksAfterSerializingAndDeserializing() {
+        FileBackedTaskManager newTm;
+        try {
+            newTm = loadFromFile(tm.getFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertEquals(newTm.getEpic(2), tm.getEpic(2),
+                "Epics with id 2 in InMemoryTaskManager and FileBackedTaskManager are not equal");
+        Assertions.assertEquals(newTm.getTask(1), tm.getTask(1),
+                "Tasks with id 1 in InMemoryTaskManager and FileBackedTaskManager are not equal");
+        Assertions.assertEquals(newTm.getSubtask(3), tm.getSubtask(3),
+                "Subtasks with id 3 in InMemoryTaskManager and FileBackedTaskManager are not equal");
     }
 
 }

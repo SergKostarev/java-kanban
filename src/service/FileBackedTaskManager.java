@@ -49,9 +49,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         FileBackedTaskManager fm = new FileBackedTaskManager(file);
         String content = Files.readString(file.toPath());
         String[] lines = content.split(System.lineSeparator());
+        int maxId = 0;
         for (int i = 0; i < lines.length; i++) {
             if (i != 0) {
                 Task taskFromFile = TaskConverter.fromString(lines[i]);
+                if (taskFromFile.getId() > maxId) {
+                    maxId = taskFromFile.getId();
+                }
                 if (taskFromFile.getClass() == Task.class) {
                     fm.tasks.put(taskFromFile.getId(), taskFromFile);
                 } else if (taskFromFile.getClass() == Subtask.class) {
@@ -63,6 +67,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                 }
             }
         }
+        fm.idCounter = maxId + 1;
         return fm;
     }
 

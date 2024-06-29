@@ -5,7 +5,7 @@ import model.Subtask;
 import model.Task;
 import model.TaskStatus;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TaskConverter {
 
@@ -25,9 +25,13 @@ public class TaskConverter {
                     subtask.getEpicId().toString());
         } else if (task.getClass() == Epic.class) {
             taskType = TaskType.EPIC.name();
-            return String.join(",", task.getId().toString(),
-                    taskType, task.getName(),
-                    task.getStatus().toString(), task.getDescription());
+            Epic epic = (Epic) task;
+            String subtasksId = epic.getSubtasksId().toString();
+            subtasksId = subtasksId.substring(1, subtasksId.length() - 1)
+                    .replace(",", ";");
+            return String.join(",", epic.getId().toString(),
+                    taskType, epic.getName(), epic.getStatus().toString(),
+                    epic.getDescription(), subtasksId);
         } else {
             throw new IllegalArgumentException("Неизвестный тип задачи");
         }
@@ -52,8 +56,14 @@ public class TaskConverter {
                         Integer.parseInt(epicId));
             }
             case "EPIC" -> {
+                String subtasksId = items[5];
+                String[] subtasksIdSplit = subtasksId.split(";");
+                Integer[] numbers = new Integer[subtasksIdSplit.length];
+                for (int i = 0; i < subtasksIdSplit.length; i++) {
+                    numbers[i] = Integer.parseInt(subtasksIdSplit[i]);
+                }
                 return new Epic(Integer.parseInt(id), name,
-                        description, new ArrayList<>());
+                        description, TaskStatus.valueOf(status), Arrays.asList(numbers));
             }
             default -> throw new IllegalArgumentException("Неизвестный тип задачи");
         }
