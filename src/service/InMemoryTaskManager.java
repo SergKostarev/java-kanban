@@ -18,7 +18,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private final TaskStartTimeComparator taskStartTimeComparator = new TaskStartTimeComparator();
 
-    protected final TreeSet <Task> sortedTasks = new TreeSet<>(taskStartTimeComparator);
+    protected final TreeSet<Task> sortedTasks = new TreeSet<>(taskStartTimeComparator);
 
     @Override
     public List<Task> getAllTasks() {
@@ -397,7 +397,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void updateEpicTime(Integer id) {
         Epic epic = epics.get(id);
-        List <Task> sortedSubtasks = sortedTasks
+        List<Task> sortedSubtasks = sortedTasks
                 .stream()
                 .filter(task -> epic.getSubtasksId().contains(task.getId()))
                 .filter(task -> task.getStartTime() != null)
