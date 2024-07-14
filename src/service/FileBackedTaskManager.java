@@ -26,7 +26,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     private void save() {
         try (BufferedWriter bw = new BufferedWriter(
                 new FileWriter(file, StandardCharsets.UTF_8))) {
-            String header = "id,type,name,status,description,epic";
+            String header = "id,type,name,status,description,startTime,duration,epic,endTime";
             bw.write(header);
             for (Task task: super.tasks.values()) {
                 bw.newLine();
@@ -64,6 +64,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                 } else if (taskFromFile.getClass() == Epic.class) {
                     Epic epic = (Epic) taskFromFile;
                     fm.epics.put(taskFromFile.getId(), epic);
+                }
+                if (taskFromFile.getStartTime() != null) {
+                    fm.sortedTasks.add(taskFromFile);
                 }
             }
         }
