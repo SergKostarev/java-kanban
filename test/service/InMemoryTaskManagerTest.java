@@ -18,11 +18,7 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     @BeforeEach
     public void prepare() {
         tm = Managers.getDefault();
-        tm.addTask(new Task("Закончить пятый спринт", "Нет описания", TaskStatus.NEW,
-                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 18, 17, 55)));
-        tm.addEpic(new Epic("Провести уборку", "До 18 мая", new ArrayList<>()));
-        tm.addSubtask(new Subtask("Вымыть пол", "Нет описания", TaskStatus.NEW, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+        super.initTasks();
     }
 
 }

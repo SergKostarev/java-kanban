@@ -146,8 +146,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public Epic updateEpic(Epic epicInput) {
-        Epic epic = super.updateEpic(epicInput);
+    public Epic updateEpic(Integer epicId, String name, String description) {
+        Epic epic = super.updateEpic(epicId, name, description);
         save();
         return epic;
     }

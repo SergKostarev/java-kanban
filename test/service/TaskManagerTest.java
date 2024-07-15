@@ -20,6 +20,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @BeforeEach
     public abstract void prepare();
 
+    public void initTasks() {
+        tm.addTask(new Task("Закончить пятый спринт", "Нет описания", TaskStatus.NEW,
+                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 18, 17, 55)));
+        tm.addEpic(new Epic("Провести уборку", "До 18 мая", new ArrayList<>()));
+        tm.addSubtask(new Subtask("Вымыть пол", "Нет описания", TaskStatus.NEW, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+    }
+
     @Test
     public void shouldReturnNonNullTasks() {
         Assertions.assertNotNull(tm.getTask(1), "Task is null");
@@ -99,14 +107,6 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void shouldNotUpdateEpicWithSubtaskIdListContainingEpicId() {
-        List <Integer> subtasksId = new ArrayList<>();
-        subtasksId.add(2);
-        Epic epic = tm.updateEpic(new Epic(2,"Изучить Java", "Нет описания", subtasksId));
-        Assertions.assertNull(epic, "Epic with subtask identifiers list containing epic identifier was updated");
-    }
-
-    @Test
     public void shouldReturnNoOldSubtasksInEpic() {
         Subtask subtask = new Subtask("Сходить в магазин", "Нет описания", TaskStatus.NEW, 2, Duration.ofMinutes(0), null);
         tm.addSubtask(subtask);
@@ -167,6 +167,40 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
                 Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
         Assertions.assertEquals(TaskStatus.IN_PROGRESS, tm.getEpic(2).getStatus(), "Epic status is not in progress");
+    }
+
+    @Test
+    public void epicStatusShouldBeNewWhenAllSubtasksAreDeleted() {
+        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
+        tm.removeAllSubtasks();
+        Assertions.assertEquals(TaskStatus.NEW, tm.getEpic(2).getStatus(), "Epic status is not new");
+    }
+
+    @Test
+    public void epicStatusShouldBeInProgressWhenAllDoneSubtaskIsDeleted() {
+        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
+        tm.removeSubtask(3);
+        Assertions.assertEquals(TaskStatus.IN_PROGRESS, tm.getEpic(2).getStatus(), "Epic status is not in progress");
+    }
+
+    @Test
+    public void epicShouldHaveCorrectTimeCharacteristics() {
+        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
+        Assertions.assertEquals(Duration.ofMinutes(200), tm.getEpic(2).getDuration(),
+                "Epic duration is not equal to 200");
+        Assertions.assertEquals(LocalDateTime.of(2024, 7, 20, 15, 55),
+                tm.getEpic(2).getStartTime(), "Wrong epic start time");
+        Assertions.assertEquals(LocalDateTime.of(2024, 7, 25, 12, 20),
+                tm.getEpic(2).getEndTime(), "Wrong epic end time");
     }
 
     @Test

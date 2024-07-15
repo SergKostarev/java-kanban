@@ -236,29 +236,20 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Epic updateEpic(Epic epicInput) {
-        if (epicInput.getSubtasksId().contains(epicInput.getId())) {
-            System.out.println("Список подзадач эпика содержит идентификатор эпика, добавление невозможно.");
-            return null;
-        }
-        if (epicInput.getId() == null) {
+    public Epic updateEpic(Integer epicId, String name, String description) {
+        if (epicId == null) {
             System.out.println("Не задан идентификатор эпика.");
             return null;
         }
-        if (!epics.containsKey(epicInput.getId())) {
+        if (!epics.containsKey(epicId)) {
             System.out.println("Не найден эпик с указанным идентификатором, обновление невозможно.");
             return null;
         }
-        for (Integer subtaskId: epicInput.getSubtasksId()) {
-            if (subtasks.get(subtaskId) == null) {
-                System.out.println("Не найдена подзадача с идентификатором " + subtaskId + ", добавление невозможно.");
-                return null;
-            }
-        }
-        Epic newEpic = new Epic(epicInput);
+        Epic oldEpic = epics.get(epicId);
+        Epic newEpic = new Epic(oldEpic.getId(), name, description,
+                oldEpic.getStatus(), oldEpic.getSubtasksId(),
+                oldEpic.getDuration(), oldEpic.getStartTime(), oldEpic.getEndTime());
         epics.put(newEpic.getId(), newEpic);
-        updateEpicStatus(newEpic.getId());
-        updateEpicTime(newEpic.getId());
         return new Epic(newEpic);
     }
 
@@ -397,26 +388,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     private void updateEpicTime(Integer id) {
         Epic epic = epics.get(id);
-        List<Task> sortedSubtasks = sortedTasks
-                .stream()
-                .filter(task -> epic.getSubtasksId().contains(task.getId()))
-                .filter(task -> task.getStartTime() != null)
-                .toList();
-        LocalDateTime epicStartTaskTime =
-                sortedSubtasks.stream()
-                .map(Task::getStartTime)
-                .findFirst()
-                .orElse(null);
-        LocalDateTime epicEndTaskTime =
-                sortedSubtasks.stream()
-                        .map(Task::getEndTime)
-                        .findFirst()
-                        .orElse(null);
-        Duration epicDuration =
-                sortedSubtasks
-                        .stream()
-                        .map(Task::getDuration)
-                        .reduce(Duration.ZERO, Duration::plus);
+        LocalDateTime epicStartTaskTime = null;
+        LocalDateTime epicEndTaskTime = null;
+        Duration epicDuration = Duration.ZERO;
+        for (Integer subtaskId: epic.getSubtasksId()) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask.getStartTime() != null
+                    && (epicStartTaskTime == null || subtask.getStartTime().isBefore(epicStartTaskTime))) {
+                epicStartTaskTime = subtask.getStartTime();
+            }
+            if (subtask.getEndTime() != null
+                    && (epicEndTaskTime == null || subtask.getEndTime().isAfter(epicEndTaskTime))) {
+                epicEndTaskTime = subtask.getEndTime();
+            }
+            epicDuration = epicDuration.plus(subtask.getDuration());
+        }
         epic.setStartTime(epicStartTaskTime);
         epic.setEndTime(epicEndTaskTime);
         epic.setDuration(epicDuration);
