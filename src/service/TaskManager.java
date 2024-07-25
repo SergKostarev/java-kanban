@@ -35,7 +35,7 @@ public interface TaskManager {
 
     Subtask updateSubtask(Subtask subtask);
 
-    Epic updateEpic(Epic newEpic);
+    Epic updateEpic(Integer epicId, String name, String description);
 
     void removeTask(Integer id);
 
@@ -46,4 +46,6 @@ public interface TaskManager {
     List<Subtask> getEpicSubtasks(Integer id);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }
