@@ -1,5 +1,7 @@
 package service;
 
+import exception.IntersectionException;
+import exception.UpdateException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -13,6 +15,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public abstract class TaskManagerTest<T extends TaskManager> {
 
     protected T tm;
@@ -21,18 +26,18 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     public abstract void prepare();
 
     public void initTasks() {
-        tm.addTask(new Task("Закончить пятый спринт", "Нет описания", TaskStatus.NEW,
-                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 18, 17, 55)));
-        tm.addEpic(new Epic("Провести уборку", "До 18 мая", new ArrayList<>()));
-        tm.addSubtask(new Subtask("Вымыть пол", "Нет описания", TaskStatus.NEW, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
+        assertDoesNotThrow(() -> tm.addTask(new Task("Закончить пятый спринт", "Нет описания", TaskStatus.NEW,
+                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 18, 17, 55))));
+        assertDoesNotThrow(() -> tm.addEpic(new Epic("Провести уборку", "До 18 мая", new ArrayList<>())));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть пол", "Нет описания", TaskStatus.NEW, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
     }
 
     @Test
     public void shouldReturnNonNullTasks() {
-        Assertions.assertNotNull(tm.getTask(1), "Task is null");
-        Assertions.assertNotNull(tm.getEpic(2), "Epic is null");
-        Assertions.assertNotNull(tm.getSubtask(3), "Subtask is null");
+        assertDoesNotThrow(() -> tm.getTask(1));
+        assertDoesNotThrow(() -> tm.getEpic(2));
+        assertDoesNotThrow(() -> tm.getSubtask(3));
     }
 
     @Test
@@ -41,8 +46,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 Duration.ofMinutes(60), LocalDateTime.of(2024, 8, 18, 17, 55));
         Task taskCopy = new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus(),
                 task.getDuration(), task.getStartTime());
-        tm.addTask(task);
-        Task taskAfter = tm.getTask(4);
+        assertDoesNotThrow(() -> tm.addTask(task));
+        Task taskAfter = assertDoesNotThrow(() -> tm.getTask(4));
         Assertions.assertNotNull(taskAfter, "Task is null");
         Assertions.assertEquals(taskCopy.getId(), taskAfter.getId(), "Task identifiers are not equal");
         Assertions.assertEquals(taskCopy.getName(), taskAfter.getName(), "Task names are not equal");
@@ -58,10 +63,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 Duration.ofMinutes(60), LocalDateTime.of(2024, 8, 18, 17, 55));
         Task taskCopy = new Task(task.getId(), task.getName(), task.getDescription(), task.getStatus(),
                 task.getDuration(), task.getStartTime());
-        tm.addTask(task);
-        tm.getTask(1);
-        tm.getTask(4);
-        tm.updateTask(new Task(4, "Погулять с собакой", "Описание", TaskStatus.IN_PROGRESS, Duration.ofMinutes(0), null));
+        assertDoesNotThrow(() -> tm.addTask(task));
+        assertDoesNotThrow(() -> tm.getTask(1));
+        assertDoesNotThrow(() -> tm.getTask(4));
+        assertDoesNotThrow(() -> tm.updateTask(new Task(4, "Погулять с собакой", "Описание", TaskStatus.IN_PROGRESS, Duration.ofMinutes(0), null)));
         List<Task> history = tm.getHistory();
         Task taskAfter =  history.get(1);
         Assertions.assertEquals(taskCopy.getId(), taskAfter.getId(), "Task identifiers are not equal");
@@ -75,10 +80,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldReturnTwoElementsInTaskHistoryAfterRepeatedGetting() {
         Task task = new Task("Сходить в магазин", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(0), null);
-        tm.addTask(task);
-        tm.getTask(1);
-        tm.getTask(4);
-        tm.getTask(1);
+        assertDoesNotThrow(() -> tm.addTask(task));
+        assertDoesNotThrow(() -> tm.getTask(1));
+        assertDoesNotThrow(() -> tm.getTask(4));
+        assertDoesNotThrow(() -> tm.getTask(1));
         List<Task> history = tm.getHistory();
         Assertions.assertEquals(2, history.size(), "History list size differs from 2");
     }
@@ -86,10 +91,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldReturnFirstTaskInTaskHistoryAfterRepeatedGetting() {
         Task task = new Task("Сходить в магазин", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(0), null);
-        tm.addTask(task);
-        tm.getTask(1);
-        tm.getTask(4);
-        tm.getTask(1);
+        assertDoesNotThrow(() -> tm.addTask(task));
+        assertDoesNotThrow(() -> tm.getTask(1));
+        assertDoesNotThrow(() -> tm.getTask(4));
+        assertDoesNotThrow(() -> tm.getTask(1));
         List<Task> history = tm.getHistory();
         Assertions.assertEquals(history.get(1).getId(), 1, "Last task id differs from 1");
     }
@@ -97,24 +102,28 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     public void shouldIgnoreGivenIdWhenAddingTask() {
         Task task = new Task(10, "Сходить в магазин", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(0), null);
-        Assertions.assertEquals(4, tm.addTask(task).getId(), "Task identifier is not equal to 4");
+        Assertions.assertEquals(4, assertDoesNotThrow(() -> tm.addTask(task)).getId(),
+                "Task identifier is not equal to 4");
     }
 
     @Test
     public void shouldNotUpdateSubtaskWithEqualIdAndEpicId() {
-        Subtask subtask = tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 3, Duration.ofMinutes(0), null));
-        Assertions.assertNull(subtask, "Subtask with equal identifier and epic identifier was updated");
+        Assertions.assertThrows(UpdateException.class, () -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания",
+                TaskStatus.DONE, 3, Duration.ofMinutes(0), null)));
     }
 
     @Test
     public void shouldReturnNoOldSubtasksInEpic() {
         Subtask subtask = new Subtask("Сходить в магазин", "Нет описания", TaskStatus.NEW, 2, Duration.ofMinutes(0), null);
-        tm.addSubtask(subtask);
-        tm.removeSubtask(4);
-        Assertions.assertEquals(tm.getEpic(2).getSubtasksId().size(), 1, "Subtask list size of epic with id 2 is not equal to 1");
-        Assertions.assertEquals(tm.getEpic(2).getSubtasksId().getFirst(), 3, "Subtask id of epic with id 2 is not 3");
+        assertDoesNotThrow(() -> tm.addSubtask(subtask));
+        assertDoesNotThrow(() -> tm.removeSubtask(4));
+        Assertions.assertEquals(assertDoesNotThrow(() -> tm.getEpic(2)).getSubtasksId().size(),
+                1, "Subtask list size of epic with id 2 is not equal to 1");
+        Assertions.assertEquals(assertDoesNotThrow(() -> tm.getEpic(2)).getSubtasksId().getFirst(),
+                3, "Subtask id of epic with id 2 is not 3");
         tm.removeAllSubtasks();
-        Assertions.assertTrue(tm.getEpic(2).getSubtasksId().isEmpty(), "Subtask list of epic with id 2 is not empty");
+        Assertions.assertTrue(assertDoesNotThrow(() -> tm.getEpic(2)).getSubtasksId().isEmpty(),
+                "Subtask list of epic with id 2 is not empty");
     }
 
     @Test
@@ -122,8 +131,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         tm.removeAllTasks();
         tm.removeAllSubtasks();
         tm.removeAllEpics();
-        tm.addTask(new Task("Закончить восьмой спринт", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(300), LocalDateTime.of(2024, 7, 13, 17, 55)));
-        tm.addTask(new Task("Закончить девятый спринт", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(300), LocalDateTime.of(2024, 7, 13, 19, 55)));
+        assertDoesNotThrow(() -> tm.addTask(new Task("Закончить восьмой спринт", "Нет описания",
+                TaskStatus.NEW, Duration.ofMinutes(300), LocalDateTime.of(2024, 7, 13, 17, 55))));
+        Assertions.assertThrows(IntersectionException.class, () -> tm.addTask(new Task("Закончить девятый спринт", "Нет описания", TaskStatus.NEW,
+                Duration.ofMinutes(300), LocalDateTime.of(2024, 7, 13, 19, 55))));
         Assertions.assertEquals(1, tm.getAllTasks().size(), "Task list size is not equal to 1");
     }
 
@@ -132,75 +143,85 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         tm.removeAllTasks();
         tm.removeAllSubtasks();
         tm.removeAllEpics();
-        tm.addTask(new Task("Закончить восьмой спринт", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 13, 17, 55)));
-        tm.addTask(new Task("Закончить девятый спринт", "Нет описания", TaskStatus.NEW, Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 13, 23, 55)));
+        assertDoesNotThrow(() -> tm.addTask(new Task("Закончить восьмой спринт", "Нет описания", TaskStatus.NEW,
+                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 13, 17, 55))));
+        assertDoesNotThrow(() -> tm.addTask(new Task("Закончить девятый спринт", "Нет описания", TaskStatus.NEW,
+                Duration.ofMinutes(60), LocalDateTime.of(2024, 7, 13, 23, 55))));
         Assertions.assertEquals(2, tm.getAllTasks().size(), "Task list size is not equal to 2");
     }
 
     @Test
     public void epicStatusShouldBeNew() {
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.NEW, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        Assertions.assertEquals(TaskStatus.NEW, tm.getEpic(2).getStatus(), "Epic status is not new");
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.NEW, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        Assertions.assertEquals(TaskStatus.NEW, assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(),
+                "Epic status is not new");
     }
 
     @Test
     public void epicStatusShouldBeDone() {
-        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.DONE, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        Assertions.assertEquals(TaskStatus.DONE, tm.getEpic(2).getStatus(), "Epic status is not done");
+        assertDoesNotThrow(() -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        Assertions.assertEquals(TaskStatus.DONE,
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(),"Epic status is not done");
     }
 
     @Test
     public void epicStatusShouldBeInProgress() {
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.DONE, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        Assertions.assertEquals(TaskStatus.IN_PROGRESS, tm.getEpic(2).getStatus(), "Epic status is not in progress");
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        Assertions.assertEquals(TaskStatus.IN_PROGRESS,
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(), "Epic status is not in progress");
     }
 
     @Test
     public void epicStatusShouldBeInProgressWhenAllTasksAreInProgress() {
-        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        Assertions.assertEquals(TaskStatus.IN_PROGRESS, tm.getEpic(2).getStatus(), "Epic status is not in progress");
+        assertDoesNotThrow(() -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        Assertions.assertEquals(TaskStatus.IN_PROGRESS,
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(), "Epic status is not in progress");
     }
 
     @Test
     public void epicStatusShouldBeNewWhenAllSubtasksAreDeleted() {
-        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
+        assertDoesNotThrow(() -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
         tm.removeAllSubtasks();
-        Assertions.assertEquals(TaskStatus.NEW, tm.getEpic(2).getStatus(), "Epic status is not new");
+        Assertions.assertEquals(TaskStatus.NEW,
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(), "Epic status is not new");
     }
 
     @Test
     public void epicStatusShouldBeInProgressWhenAllDoneSubtaskIsDeleted() {
-        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        tm.removeSubtask(3);
-        Assertions.assertEquals(TaskStatus.IN_PROGRESS, tm.getEpic(2).getStatus(), "Epic status is not in progress");
+        assertDoesNotThrow(() -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        assertDoesNotThrow(() -> tm.removeSubtask(3));
+        Assertions.assertEquals(TaskStatus.IN_PROGRESS,
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStatus(), "Epic status is not in progress");
     }
 
     @Test
     public void epicShouldHaveCorrectTimeCharacteristics() {
-        tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
-                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55)));
-        tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
-                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0)));
-        Assertions.assertEquals(Duration.ofMinutes(200), tm.getEpic(2).getDuration(),
+        assertDoesNotThrow(() -> tm.updateSubtask(new Subtask(3, "Вымыть пол", "Нет описания", TaskStatus.DONE, 2,
+                Duration.ofMinutes(180), LocalDateTime.of(2024, 7, 20, 15, 55))));
+        assertDoesNotThrow(() -> tm.addSubtask(new Subtask("Вымыть посуду", "Нет описания", TaskStatus.IN_PROGRESS, 2,
+                Duration.ofMinutes(20), LocalDateTime.of(2024, 7, 25, 12, 0))));
+        Assertions.assertEquals(Duration.ofMinutes(200),
+                assertDoesNotThrow(() -> tm.getEpic(2)).getDuration(),
                 "Epic duration is not equal to 200");
         Assertions.assertEquals(LocalDateTime.of(2024, 7, 20, 15, 55),
-                tm.getEpic(2).getStartTime(), "Wrong epic start time");
+                assertDoesNotThrow(() -> tm.getEpic(2)).getStartTime(),
+                "Wrong epic start time");
         Assertions.assertEquals(LocalDateTime.of(2024, 7, 25, 12, 20),
-                tm.getEpic(2).getEndTime(), "Wrong epic end time");
+                assertDoesNotThrow(() -> tm.getEpic(2)).getEndTime(), "Wrong epic end time");
     }
 
     @Test
@@ -213,8 +234,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void historyShouldNotContainDuplicatedTasks() {
-        tm.getTask(1);
-        tm.getTask(1);
+        assertDoesNotThrow(() -> tm.getTask(1));
+        assertDoesNotThrow(() -> tm.getTask(1));
         Assertions.assertEquals(1, tm.getHistory().size(), "History size is not equal to 1");
     }
 

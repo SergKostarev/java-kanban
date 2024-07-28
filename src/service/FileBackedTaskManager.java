@@ -1,5 +1,6 @@
 package service;
 
+import exception.*;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -75,21 +76,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public Task addTask(Task taskInput) {
+    public Task addTask(Task taskInput) throws IntersectionException {
         Task task = super.addTask(taskInput);
         save();
         return task;
     }
 
     @Override
-    public Subtask addSubtask(Subtask subtaskInput) {
+    public Subtask addSubtask(Subtask subtaskInput) throws IntersectionException, NotFoundException {
         Subtask subtask = super.addSubtask(subtaskInput);
         save();
         return subtask;
     }
 
     @Override
-    public Epic addEpic(Epic epicInput) {
+    public Epic addEpic(Epic epicInput) throws NotFoundException, IdentifierException {
         Epic epic = super.addEpic(epicInput);
         save();
         return epic;
@@ -114,40 +115,43 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public void removeTask(Integer id) {
+    public Task removeTask(Integer id) throws NotFoundException {
         super.removeTask(id);
         save();
+        return null;
     }
 
     @Override
-    public void removeSubtask(Integer id) {
+    public Subtask removeSubtask(Integer id) throws NotFoundException {
         super.removeSubtask(id);
         save();
+        return null;
     }
 
     @Override
-    public void removeEpic(Integer id) {
+    public Epic removeEpic(Integer id) throws NotFoundException {
         super.removeEpic(id);
         save();
+        return null;
     }
 
     @Override
-    public Task updateTask(Task taskInput) {
+    public Task updateTask(Task taskInput) throws IntersectionException, NotFoundException, IdentifierException {
         Task task = super.updateTask(taskInput);
         save();
         return task;
     }
 
     @Override
-    public Subtask updateSubtask(Subtask subtaskInput) {
+    public Subtask updateSubtask(Subtask subtaskInput) throws IntersectionException, NotFoundException, UpdateException, IdentifierException {
         Subtask subtask = super.updateSubtask(subtaskInput);
         save();
         return subtask;
     }
 
     @Override
-    public Epic updateEpic(Integer epicId, String name, String description) {
-        Epic epic = super.updateEpic(epicId, name, description);
+    public Epic updateEpic(Epic epicInput) throws NotFoundException, IdentifierException {
+        Epic epic = super.updateEpic(epicInput);
         save();
         return epic;
     }

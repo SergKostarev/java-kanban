@@ -1,5 +1,9 @@
 package service;
 
+import exception.IdentifierException;
+import exception.IntersectionException;
+import exception.NotFoundException;
+import exception.UpdateException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -71,39 +75,33 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task getTask(Integer id) {
+    public Task getTask(Integer id) throws NotFoundException {
         Task task = tasks.get(id);
         if (task != null) {
             history.add(task);
-        } else {
-            System.out.println("Не найдена задача с указанным идентификатором");
-            return null;
+            return new Task(task);
         }
-        return new Task(task);
+        throw new NotFoundException("Не найдена задача с указанным идентификатором", id);
     }
 
     @Override
-    public Subtask getSubtask(Integer id) {
+    public Subtask getSubtask(Integer id) throws NotFoundException {
         Subtask subtask = subtasks.get(id);
         if (subtask != null) {
             history.add(subtask);
-        } else {
-            System.out.println("Не найдена подзадача с указанным идентификатором");
-            return null;
+            return new Subtask(subtask);
         }
-        return new Subtask(subtask);
+        throw new NotFoundException("Не найдена подзадача с указанным идентификатором", id);
     }
 
     @Override
-    public Epic getEpic(Integer id) {
+    public Epic getEpic(Integer id) throws NotFoundException {
         Epic epic = epics.get(id);
         if (epic != null) {
             history.add(epic);
-        } else {
-            System.out.println("Не найден эпик с указанным идентификатором");
-            return null;
+            return new Epic(epic);
         }
-        return new Epic(epic);
+        throw new NotFoundException("Не найден эпик с указанным идентификатором", id);
     }
 
     private void setId(Task task) {
@@ -112,11 +110,10 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task addTask(Task taskInput) {
+    public Task addTask(Task taskInput) throws IntersectionException {
         if (timeIntersectionCheck(taskInput)) {
-            System.out.println("Временные интервалы задач пересекаются, " +
-                    "добавлние невозможно");
-            return null;
+            throw new IntersectionException("Временные интервалы задач пересекаются, " +
+                                "добавлние невозможно", taskInput.getId());
         }
         Task task = new Task(taskInput);
         setId(task);
@@ -128,17 +125,15 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Subtask addSubtask(Subtask subtaskInput) {
+    public Subtask addSubtask(Subtask subtaskInput) throws IntersectionException, NotFoundException {
         if (timeIntersectionCheck(subtaskInput)) {
-            System.out.println("Временные интервалы задач пересекаются," +
-                    "добавлние невозможно");
-            return null;
+            throw new IntersectionException("Временные интервалы задач пересекаются, " +
+                    "добавлние невозможно", subtaskInput.getId());
         }
         Subtask subtask = new Subtask(subtaskInput);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic == null) {
-            System.out.println("Не найден эпик с указанным идентификатором, добавление подзадачи невозможно.");
-            return null;
+            throw new NotFoundException("Не найдена подзадача с указанным идентификатором", subtaskInput.getId());
         }
         setId(subtask);
         subtasks.put(subtask.getId(), subtask);
@@ -152,16 +147,14 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Epic addEpic(Epic epicInput) {
+    public Epic addEpic(Epic epicInput) throws NotFoundException, IdentifierException {
         Epic epic = new Epic(epicInput);
         if (epic.getSubtasksId().contains(epic.getId())) {
-            System.out.println("Список подзадач эпика содержит идентификатор эпика, добавление невозможно.");
-            return null;
+            throw new IdentifierException("Список подзадач эпика содержит идентификатор эпика, добавление невозможно.", epicInput.getId());
         }
         for (Integer subtaskId: epic.getSubtasksId()) {
             if (subtasks.get(subtaskId) == null) {
-                System.out.println("Не найдена подзадача с идентификатором " + subtaskId + ", добавление невозможно.");
-                return null;
+                throw new NotFoundException("Не найден эпик с указанным идентификатором", epicInput.getId());
             }
         }
         setId(epic);
@@ -171,19 +164,16 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task updateTask(Task taskInput) {
+    public Task updateTask(Task taskInput) throws IntersectionException, NotFoundException, IdentifierException {
         if (timeIntersectionCheck(taskInput)) {
-            System.out.println("Временные интервалы задач пересекаются," +
-                    "добавлние невозможно");
-            return null;
+            throw new IntersectionException("Временные интервалы задач пересекаются, " +
+                    "добавлние невозможно", taskInput.getId());
         }
         if (taskInput.getId() == null) {
-            System.out.println("Не задан идентификатор задачи.");
-            return null;
+            throw new IdentifierException("Не задан идентификатор задачи.", taskInput.getId());
         }
         if (!tasks.containsKey(taskInput.getId())) {
-            System.out.println("Не найдена задача с указанным идентификатором, обновление невозможно.");
-            return null;
+            throw new NotFoundException("Не найдена задача с указанным идентификатором, обновление невозможно.", taskInput.getId());
         }
         if (tasks.get(taskInput.getId()).getStartTime() != null) {
             sortedTasks.remove(tasks.get(taskInput.getId()));
@@ -197,28 +187,23 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Subtask updateSubtask(Subtask subtaskInput) {
+    public Subtask updateSubtask(Subtask subtaskInput) throws IntersectionException, NotFoundException, UpdateException, IdentifierException {
         if (timeIntersectionCheck(subtaskInput)) {
-            System.out.println("Временные интервалы задач пересекаются," +
-                    "добавлние невозможно");
-            return null;
+            throw new IntersectionException("Временные интервалы задач пересекаются, " +
+                    "добавлние невозможно", subtaskInput.getId());
         }
         if (subtaskInput.getId() == null) {
-            System.out.println("Не задан идентификатор подзадачи.");
-            return null;
+            throw new IdentifierException("Не задан идентификатор подзадачи.", subtaskInput.getId());
         }
         if (subtaskInput.getId().equals(subtaskInput.getEpicId())) {
-            System.out.println("Идентификаторы эпика и подзадачи совпадают, добавление подзадачи невозможно.");
-            return null;
+            throw new UpdateException("Идентификаторы эпика и подзадачи совпадают, добавление подзадачи невозможно.", subtaskInput.getId());
         }
         if (!subtasks.containsKey(subtaskInput.getId())) {
-            System.out.println("Не найдена подзадча с указанным идентификатором, обновление невозможно.");
-            return null;
+            throw new NotFoundException("Не найдена подзадча с указанным идентификатором, обновление невозможно.", subtaskInput.getId());
         }
         Epic epic = epics.get(subtaskInput.getEpicId());
         if (epic == null) {
-            System.out.println("Не найден эпик с указанным идентификатором, обновление подзадачи невозможно.");
-            return null;
+            throw new NotFoundException("Не найден эпик с указанным идентификатором, обновление подзадачи невозможно.", subtaskInput.getId());
         }
         if (subtasks.get(subtaskInput.getId()).getStartTime() != null) {
             sortedTasks.remove(subtasks.get(subtaskInput.getId()));
@@ -236,17 +221,16 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Epic updateEpic(Integer epicId, String name, String description) {
+    public Epic updateEpic(Epic epicInput) throws NotFoundException, IdentifierException {
+        Integer epicId = epicInput.getId();
         if (epicId == null) {
-            System.out.println("Не задан идентификатор эпика.");
-            return null;
+            throw new IdentifierException("Не задан идентификатор эпика.", epicInput.getId());
         }
         if (!epics.containsKey(epicId)) {
-            System.out.println("Не найден эпик с указанным идентификатором, обновление невозможно.");
-            return null;
+            throw new NotFoundException("Не найден эпик с указанным идентификатором, обновление невозможно.", epicId);
         }
         Epic oldEpic = epics.get(epicId);
-        Epic newEpic = new Epic(oldEpic.getId(), name, description,
+        Epic newEpic = new Epic(oldEpic.getId(), epicInput.getName(), epicInput.getDescription(),
                 oldEpic.getStatus(), oldEpic.getSubtasksId(),
                 oldEpic.getDuration(), oldEpic.getStartTime(), oldEpic.getEndTime());
         epics.put(newEpic.getId(), newEpic);
@@ -254,23 +238,22 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeTask(Integer id) {
+    public Task removeTask(Integer id) throws NotFoundException {
         if (!tasks.containsKey(id)) {
-            System.out.println("Задача с указанным идентификатором не найдена, удаление невозможно.");
-            return;
+            throw new NotFoundException("Задача с указанным идентификатором не найдена, удаление невозможно.", id);
         }
         Task task = tasks.get(id);
         tasks.remove(id);
         if (task.getStartTime() != null) {
             sortedTasks.remove(task);
         }
+        return task;
     }
 
     @Override
-    public void removeSubtask(Integer id) {
+    public Subtask removeSubtask(Integer id) throws NotFoundException {
         if (!subtasks.containsKey(id)) {
-            System.out.println("Подзадача с указанным идентификатором не найдена, удаление невозможно.");
-            return;
+            throw new NotFoundException("Подзадача с указанным идентификатором не найдена, удаление невозможно.", id);
         }
         Subtask subtask = subtasks.get(id);
         Epic epic = epics.get(subtask.getEpicId());
@@ -281,13 +264,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
         updateEpicStatus(subtask.getEpicId());
         updateEpicTime(subtask.getEpicId());
+        return subtask;
     }
 
     @Override
-    public void removeEpic(Integer id) {
+    public Epic removeEpic(Integer id) throws NotFoundException {
         if (!epics.containsKey(id)) {
-            System.out.println("Эпик с указанным идентификатором не найден, удаление невозможно.");
-            return;
+            throw new NotFoundException("Эпик с указанным идентификатором не найден, удаление невозможно.", id);
         }
         epics.get(id).getSubtasksId()
                 .stream()
@@ -297,13 +280,13 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic.getStartTime() != null) {
             sortedTasks.remove(epic);
         }
+        return epic;
     }
 
     @Override
-    public List<Subtask> getEpicSubtasks(Integer epicId) {
+    public List<Subtask> getEpicSubtasks(Integer epicId) throws NotFoundException {
         if (!epics.containsKey(epicId)) {
-            System.out.println("Эпик с указанным идентификатором не найден.");
-            return null;
+            throw new NotFoundException("Эпик с указанным идентификатором не найден.", epicId);
         }
         List<Subtask> subtasksList = new ArrayList<>();
         epics.get(epicId).getSubtasksId()
