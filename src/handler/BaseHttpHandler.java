@@ -24,7 +24,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         exchange.close();
     }
 
-    protected ErrorDTO getErrorMessage (String message, Integer id, int statusCode) {
+    protected ErrorDTO getErrorMessage(String message, Integer id, int statusCode) {
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.getDetails().put(statusCode, message + ", id: " + id);
         return errorDTO;
