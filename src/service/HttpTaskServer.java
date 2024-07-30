@@ -22,12 +22,7 @@ public class HttpTaskServer {
 
     public HttpTaskServer(TaskManager taskManager) throws IOException {
         httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
-        gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .serializeNulls()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-                .registerTypeAdapter(Duration.class, new DurationAdapter())
-                .create();
+        gson = getGsonBuilder();
         httpServer.createContext("/tasks", new TaskHandler(taskManager, gson));
         httpServer.createContext("/subtasks", new SubtaskHandler(taskManager, gson));
         httpServer.createContext("/epics", new EpicHandler(taskManager,gson));
@@ -41,6 +36,15 @@ public class HttpTaskServer {
 
     public void stop() {
         httpServer.stop(0);
+    }
+
+    private Gson getGsonBuilder() {
+        return new GsonBuilder()
+                .setPrettyPrinting()
+                .serializeNulls()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .create();
     }
 
     public Gson getGson() {

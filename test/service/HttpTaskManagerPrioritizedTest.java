@@ -19,9 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskManagerPrioritizedTest extends HttpTaskManagerTest {
 
-    public HttpTaskManagerPrioritizedTest() throws IOException {
-    }
-
     @Test
     public void testGetPrioritizedTasks() throws IOException, InterruptedException {
         Task task = new Task("Test", "Testing task",

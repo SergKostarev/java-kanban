@@ -19,9 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskManagerTasksTest extends HttpTaskManagerTest {
 
-    public HttpTaskManagerTasksTest() throws IOException {
-    }
-
     @Test
     public void testAddTask() throws IOException, InterruptedException {
         Task task = new Task("Test", "Testing task",

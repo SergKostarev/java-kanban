@@ -22,9 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskManagerEpicsTest extends HttpTaskManagerTest {
 
-    public HttpTaskManagerEpicsTest() throws IOException {
-    }
-
     @Test
     public void testAddEpic() throws IOException, InterruptedException {
         Epic epic = new Epic("Test", "Testing epic",

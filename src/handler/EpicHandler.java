@@ -13,8 +13,14 @@ import java.io.IOException;
 import java.util.List;
 
 public class EpicHandler extends BaseHttpHandler implements HttpHandler {
+
+    private final TaskManager taskManager;
+
+    private final Gson gson;
+
     public EpicHandler(TaskManager taskManager, Gson gson) {
-        super(taskManager, gson);
+        this.taskManager = taskManager;
+        this.gson = gson;
     }
 
     @Override
@@ -24,46 +30,46 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                 && pathParts[1].equals("epics") && pathParts[3].equals("subtasks")) {
             try {
                 Integer id = Integer.parseInt(pathParts[2]);
-                List<Subtask> epic = super.taskManager.getEpicSubtasks(id);
-                super.sendText(exchange, gson.toJson(epic), 200);
+                List<Subtask> epic = taskManager.getEpicSubtasks(id);
+                sendResponse(exchange, gson.toJson(epic), 200);
             } catch (NotFoundException te) {
-                super.sendTaskException(exchange, te, 404);
+                sendResponse(exchange, gson.toJson(getErrorMessage(te.getMessage(), te.getId(), 404)), 404);
             } catch (Exception e) {
-                super.sendNoEndpoint(exchange);
+                sendResponse(exchange, gson.toJson(getErrorMessage("Эндпойнт не существует", null, 404)), 404);
             }
         } else if (exchange.getRequestMethod().equals("GET") && pathParts.length == 2 && pathParts[1].equals("epics")) {
-            super.sendText(exchange, gson.toJson(super.taskManager.getAllEpics()), 200);
+            sendResponse(exchange, gson.toJson(taskManager.getAllEpics()), 200);
         } else if (exchange.getRequestMethod().equals("GET")
                 && pathParts.length == 3 && pathParts[1].equals("epics")) {
             try {
                 Integer id = Integer.parseInt(pathParts[2]);
-                Epic epic = super.taskManager.getEpic(id);
-                super.sendText(exchange, gson.toJson(epic), 200);
+                Epic epic = taskManager.getEpic(id);
+                sendResponse(exchange, gson.toJson(epic), 200);
             } catch (NotFoundException te) {
-                super.sendTaskException(exchange, te, 404);
+                sendResponse(exchange, gson.toJson(getErrorMessage(te.getMessage(), te.getId(), 404)), 404);
             } catch (Exception e) {
-                super.sendNoEndpoint(exchange);
+                sendResponse(exchange, gson.toJson(getErrorMessage("Эндпойнт не существует", null, 404)), 404);
             }
         } else if (exchange.getRequestMethod().equals("DELETE")
                 && pathParts.length == 3 && pathParts[1].equals("epics")) {
             try {
                 Integer id = Integer.parseInt(pathParts[2]);
-                Epic epic = super.taskManager.removeEpic(id);
-                super.sendText(exchange, gson.toJson(epic), 200);
+                Epic epic = taskManager.removeEpic(id);
+                sendResponse(exchange, gson.toJson(epic), 200);
             } catch (Exception e) {
-                super.sendNoEndpoint(exchange);
+                sendResponse(exchange, gson.toJson(getErrorMessage("Эндпойнт не существует", null, 404)), 404);
             }
         } else if (exchange.getRequestMethod().equals("POST") && pathParts.length == 2 && pathParts[1].equals("epics")) {
             String json = new String(exchange.getRequestBody().readAllBytes(), DEFAULT_CHARSET);
             Epic epic = gson.fromJson(json, Epic.class);
             try {
                 Epic epicOutput = taskManager.addEpic(epic);
-                super.sendText(exchange, gson.toJson(epicOutput), 201);
+                sendResponse(exchange, gson.toJson(epicOutput), 201);
             } catch (NotFoundException | IdentifierException te) {
-                super.sendTaskException(exchange, te, 404);
+                sendResponse(exchange, gson.toJson(getErrorMessage(te.getMessage(), te.getId(), 404)), 404);
             }
         } else {
-            super.sendNoEndpoint(exchange);
+            sendResponse(exchange, gson.toJson(getErrorMessage("Эндпойнт не существует", null, 404)), 404);
         }
     }
 }

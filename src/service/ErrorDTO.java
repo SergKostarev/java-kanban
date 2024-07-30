@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ErrorDTO {
-    private final Map<String, Object> details = new HashMap<>();
+    private final Map<Integer, String> details = new HashMap<>();
 
-    public Map<String, Object> getDetails() {
+    public Map<Integer, String> getDetails() {
         return details;
     }
 }

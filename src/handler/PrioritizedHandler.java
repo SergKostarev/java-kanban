@@ -8,17 +8,22 @@ import service.TaskManager;
 import java.io.IOException;
 
 public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
+    private final TaskManager taskManager;
+
+    private final Gson gson;
+
     public PrioritizedHandler(TaskManager taskManager, Gson gson) {
-        super(taskManager, gson);
+        this.taskManager = taskManager;
+        this.gson = gson;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
         if (exchange.getRequestMethod().equals("GET") && pathParts.length == 2 && pathParts[1].equals("prioritized")) {
-            super.sendText(exchange, gson.toJson(super.taskManager.getPrioritizedTasks()), 200);
+            sendResponse(exchange, gson.toJson(taskManager.getPrioritizedTasks()), 200);
         } else {
-            super.sendNoEndpoint(exchange);
+            sendResponse(exchange, gson.toJson(getErrorMessage("Эндпойнт не существует", null, 404)), 404);
         }
     }
 }

@@ -9,14 +9,13 @@ import java.io.IOException;
 public abstract class HttpTaskManagerTest {
 
     protected TaskManager manager = new InMemoryTaskManager();
-    protected HttpTaskServer taskServer = new HttpTaskServer(manager);
-    protected Gson gson = taskServer.getGson();
-
-    public HttpTaskManagerTest() throws IOException {
-    }
+    protected HttpTaskServer taskServer;
+    protected Gson gson;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws IOException {
+        taskServer = new HttpTaskServer(manager);
+        gson = taskServer.getGson();
         manager.removeAllTasks();
         manager.removeAllSubtasks();
         manager.removeAllEpics();
