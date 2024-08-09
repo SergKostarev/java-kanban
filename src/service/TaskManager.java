@@ -1,5 +1,9 @@
 package service;
 
+import exception.IdentifierException;
+import exception.IntersectionException;
+import exception.NotFoundException;
+import exception.UpdateException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -19,31 +23,31 @@ public interface TaskManager {
 
     void removeAllEpics();
 
-    Task getTask(Integer id);
+    Task getTask(Integer id) throws NotFoundException;
 
-    Subtask getSubtask(Integer id);
+    Subtask getSubtask(Integer id) throws NotFoundException;
 
-    Epic getEpic(Integer id);
+    Epic getEpic(Integer id) throws NotFoundException;
 
-    Task addTask(Task task);
+    Task addTask(Task task) throws IntersectionException;
 
-    Subtask addSubtask(Subtask subtask);
+    Subtask addSubtask(Subtask subtask) throws IntersectionException, NotFoundException;
 
-    Epic addEpic(Epic epic);
+    Epic addEpic(Epic epic) throws NotFoundException, IdentifierException;
 
-    Task updateTask(Task task);
+    Task updateTask(Task task) throws IntersectionException, NotFoundException, IdentifierException;
 
-    Subtask updateSubtask(Subtask subtask);
+    Subtask updateSubtask(Subtask subtask) throws IntersectionException, NotFoundException, UpdateException, IdentifierException;
 
-    Epic updateEpic(Integer epicId, String name, String description);
+    Epic updateEpic(Epic epicInput) throws NotFoundException, IdentifierException;
 
-    void removeTask(Integer id);
+    Task removeTask(Integer id) throws NotFoundException;
 
-    void removeSubtask(Integer id);
+    Subtask removeSubtask(Integer id) throws NotFoundException;
 
-    void removeEpic(Integer id);
+    Epic removeEpic(Integer id) throws NotFoundException;
 
-    List<Subtask> getEpicSubtasks(Integer id);
+    List<Subtask> getEpicSubtasks(Integer id) throws NotFoundException;
 
     List<Task> getHistory();
 
